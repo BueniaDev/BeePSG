@@ -92,6 +92,11 @@ namespace beepsg
 	return (clock_rate / 16);
     }
 
+    uint32_t SN76489::get_divisor() const
+    {
+	return 16;
+    }
+
     void SN76489::config(int noisefb, int lfsrbitwidth)
     {
 	noisefeedback = noisefb;

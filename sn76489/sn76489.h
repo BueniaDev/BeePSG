@@ -16,6 +16,7 @@ namespace beepsg
 	    ~SN76489();
 
 	    uint32_t get_sample_rate(uint32_t clock_rate);
+	    uint32_t get_divisor() const;
 	    void config(int noisefb, int lfsrbitwidth);
 	    void writeIO(uint8_t data);
 	    void writestereo(uint8_t data);
