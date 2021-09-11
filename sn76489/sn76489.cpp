@@ -34,6 +34,15 @@ namespace beepsg
 	return ((reg >> bit) & 1);
     }
 
+    int SN76489::parity(int val)
+    {
+	val ^= (val >> 8);
+	val ^= (val >> 4);
+	val ^= (val >> 2);
+	val ^= (val >> 1);
+	return (val & 1);
+    }
+
     void SN76489::toneclock()
     {
 	for (int numtone = 0; numtone < 3; numtone++)
@@ -43,6 +52,25 @@ namespace beepsg
 		low_or_high[numtone] = !low_or_high[numtone];
 		tone_vals[numtone] = tone_regs[numtone];
 	    }
+	}
+    }
+
+    void SN76489::noiseclock()
+    {
+	if (--noise_val <= 0)
+	{
+	    output_toggle = !output_toggle;
+
+	    if (output_toggle)
+	    {
+		low_or_high[3] = testbit(lfsr, 0);
+		int value_rotated = testbit(noise_reg, 2) ? parity((lfsr & noisefeedback)) : testbit(lfsr, 0);
+		lfsr >>= 1;
+		lfsr |= (value_rotated << noisebitmask);
+	    }
+
+	    int noise_reload = (noise_reg & 0x3);
+	    noise_val = (noise_reload == 3) ? tone_regs[2] : noise_value_table[noise_reload];
 	}
     }
 
@@ -126,6 +154,7 @@ namespace beepsg
     void SN76489::clockchip()
     {
 	toneclock();
+	noiseclock();
     }
 
     array<int16_t, 2> SN76489::get_sample()

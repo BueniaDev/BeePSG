@@ -24,8 +24,10 @@ namespace beepsg
 
 	private:
 	    bool testbit(uint32_t reg, int bit);
+	    int parity(int val);
 
 	    void toneclock();
+	    void noiseclock();
 	    int16_t generate_sample();
 
 	    int noisefeedback = 0;
@@ -38,6 +40,8 @@ namespace beepsg
 
 	    array<int, 4> volume_regs;
 	    array<int16_t, 16> volume_table;
+
+	    array<int, 3> noise_value_table = {0x10, 0x20, 0x40};
 
 	    array<int, 3> tone_regs;
 	    array<int, 3> tone_vals;
