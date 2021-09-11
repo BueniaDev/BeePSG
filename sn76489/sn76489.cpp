@@ -6,7 +6,22 @@ namespace beepsg
 {
     SN76489::SN76489()
     {
+	noisefeedback = 9;
+	noisebitmask = 15;
+	lfsr = 0x8000;
 
+	for (int level = 0; level < 15; level++)	
+	{
+	    float value = pow(pow(10.0, -0.1), level);
+	    volume_table[level] = int16_t((value * 2048) + 0.5);
+	}
+
+	volume_table[0xF] = 0;
+
+	volume_regs.fill(0xF);
+	tone_regs.fill(0);
+	tone_vals.fill(0);
+	low_or_high.fill(false);
     }
 
     SN76489::~SN76489()
@@ -19,6 +34,31 @@ namespace beepsg
 	return ((reg >> bit) & 1);
     }
 
+    void SN76489::toneclock()
+    {
+	for (int numtone = 0; numtone < 3; numtone++)
+	{
+	    if (--tone_vals[numtone] <= 0)
+	    {
+		low_or_high[numtone] = !low_or_high[numtone];
+		tone_vals[numtone] = tone_regs[numtone];
+	    }
+	}
+    }
+
+    int16_t SN76489::generate_sample()
+    {
+	int16_t sample = 0;
+
+	for (int channel = 0; channel < 4; channel++)
+	{
+	    int volume = !low_or_high[channel] ? 0xF : volume_regs[channel];
+	    sample += volume_table[volume];
+	}
+
+	return sample;
+    }
+
     uint32_t SN76489::get_sample_rate(uint32_t clock_rate)
     {
 	return (clock_rate / 16);
@@ -26,13 +66,56 @@ namespace beepsg
 
     void SN76489::config(int noisefb, int lfsrbitwidth)
     {
-	cout << "Noise feedback: " << dec << noisefb << endl;
-	cout << "LFSR bit width: " << dec << lfsrbitwidth << endl;
+	noisefeedback = noisefb;
+	noisebitmask = (lfsrbitwidth - 1);
+	lfsr = (1 << noisebitmask);
     }
 
     void SN76489::writeIO(uint8_t data)
     {
-	cout << "Writing value of " << hex << (int)data << " to SN76489 PSG" << endl;
+	if (testbit(data, 7))
+	{
+	    int channel = ((data >> 5) & 0x3);
+	    bool is_volume_reg = testbit(data, 4);
+	    latchedregister = ((is_volume_reg << 2) | channel);
+	    
+	    if (is_volume_reg)
+	    {
+		volume_regs[channel] = (data & 0xF);
+	    }
+	    else
+	    {
+		if (channel == 3)
+		{
+		    noise_reg = (data & 0x7);
+		}
+		else
+		{
+		    tone_regs[channel] = ((tone_regs[channel] & 0x3F0) | (data & 0xF));
+		}
+	    }
+	}
+	else
+	{
+	    bool is_volume_reg = testbit(latchedregister, 2);
+	    int channel = (latchedregister & 0x3);
+
+	    if (is_volume_reg)
+	    {
+		volume_regs[channel] = (data & 0xF);
+	    }
+	    else
+	    {
+		if (channel == 3)
+		{
+		    noise_reg = (data & 0x7);
+		}
+		else
+		{
+		    tone_regs[channel] = (((data & 0x3F) << 4) | (tone_regs[channel] & 0xF));
+		}
+	    }
+	}
     }
 
     void SN76489::writestereo(uint8_t data)
@@ -42,12 +125,14 @@ namespace beepsg
 
     void SN76489::clockchip()
     {
-	return;
+	toneclock();
     }
 
     array<int16_t, 2> SN76489::get_sample()
     {
-	array<int16_t, 2> samples = {0, 0};
+	int16_t left = generate_sample();
+	int16_t right = generate_sample();
+	array<int16_t, 2> samples = {left, right};
 	return samples;
     }
 };
