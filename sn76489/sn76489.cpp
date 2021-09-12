@@ -49,7 +49,17 @@ namespace beepsg
 	{
 	    if (--tone_vals[numtone] <= 0)
 	    {
-		low_or_high[numtone] = !low_or_high[numtone];
+		// If tone register is zero, output is +1
+		// (used for sample playback)
+		if (tone_regs[numtone] == 0)
+		{
+		    low_or_high[numtone] = true;
+		}
+		else
+		{
+		    low_or_high[numtone] = !low_or_high[numtone];
+		}
+
 		tone_vals[numtone] = tone_regs[numtone];
 	    }
 	}
