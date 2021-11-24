@@ -29,20 +29,6 @@ namespace beepsg
 
     }
 
-    bool SN76489::testbit(uint32_t reg, int bit)
-    {
-	return ((reg >> bit) & 1);
-    }
-
-    int SN76489::parity(int val)
-    {
-	val ^= (val >> 8);
-	val ^= (val >> 4);
-	val ^= (val >> 2);
-	val ^= (val >> 1);
-	return (val & 1);
-    }
-
     void SN76489::toneclock()
     {
 	for (int numtone = 0; numtone < 3; numtone++)

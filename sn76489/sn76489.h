@@ -24,8 +24,20 @@ namespace beepsg
 	    array<int16_t, 2> get_sample();
 
 	private:
-	    bool testbit(uint32_t reg, int bit);
-	    int parity(int val);
+	    template<typename T>
+	    bool testbit(T reg, int bit)
+	    {
+		return ((reg >> bit) & 1) ? true : false;
+	    }
+
+	    int parity(int val)
+	    {
+		val ^= (val >> 8);
+		val ^= (val >> 4);
+		val ^= (val >> 2);
+		val ^= (val >> 1);
+		return (val & 1);
+	    }
 
 	    void toneclock();
 	    void noiseclock();
