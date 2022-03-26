@@ -1,3 +1,21 @@
+/*
+    This file is part of the BeePSG engine.
+    Copyright (C) 2022 BueniaDev.
+
+    BeePSG is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    BeePSG is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with BeePSG.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "sn76489.h"
 using namespace beepsg;
 using namespace std;
@@ -13,7 +31,7 @@ namespace beepsg
 	for (int level = 0; level < 15; level++)	
 	{
 	    float value = pow(pow(10.0, -0.1), level);
-	    volume_table[level] = int16_t((value * 2048) + 0.5);
+	    volume_table[level] = int16_t((value * 4096) + 0.5);
 	}
 
 	volume_table[0xF] = 0;
@@ -158,11 +176,11 @@ namespace beepsg
 	noiseclock();
     }
 
-    array<int16_t, 2> SN76489::get_sample()
+    array<int32_t, 2> SN76489::get_sample()
     {
 	int16_t left = generate_sample();
 	int16_t right = generate_sample();
-	array<int16_t, 2> samples = {left, right};
+	array<int32_t, 2> samples = {left, right};
 	return samples;
     }
 };

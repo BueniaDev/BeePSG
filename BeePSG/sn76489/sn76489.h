@@ -1,5 +1,23 @@
-#ifndef BEEPSG_SN76489
-#define BEEPSG_SN76489
+/*
+    This file is part of the BeePSG engine.
+    Copyright (C) 2022 BueniaDev.
+
+    BeePSG is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    BeePSG is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with BeePSG.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#ifndef BEEPSG_SN76489_H
+#define BEEPSG_SN76489_H
 
 #include <iostream>
 #include <cstdint>
@@ -21,7 +39,7 @@ namespace beepsg
 	    void writeIO(uint8_t data);
 	    void writestereo(uint8_t data);
 	    void clockchip();
-	    array<int16_t, 2> get_sample();
+	    array<int32_t, 2> get_sample();
 
 	private:
 	    template<typename T>
@@ -66,4 +84,4 @@ namespace beepsg
 }
 
 
-#endif // BEEPSG_SN76489
+#endif // BEEPSG_SN76489_H
