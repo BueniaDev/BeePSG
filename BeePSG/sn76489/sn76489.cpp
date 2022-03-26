@@ -24,22 +24,7 @@ namespace beepsg
 {
     SN76489::SN76489()
     {
-	noisefeedback = 9;
-	noisebitmask = 15;
-	lfsr = 0x8000;
 
-	for (int level = 0; level < 15; level++)	
-	{
-	    float value = pow(pow(10.0, -0.1), level);
-	    volume_table[level] = int16_t((value * 4096) + 0.5);
-	}
-
-	volume_table[0xF] = 0;
-
-	volume_regs.fill(0xF);
-	tone_regs.fill(0);
-	tone_vals.fill(0);
-	low_or_high.fill(false);
     }
 
     SN76489::~SN76489()
@@ -88,14 +73,20 @@ namespace beepsg
 	}
     }
 
-    int16_t SN76489::generate_sample()
+    int32_t SN76489::generate_sample(bool is_right_ch)
     {
-	int16_t sample = 0;
+	int32_t sample = 0;
+
+	int stereo_offs = (is_right_ch) ? 4 : 0;
 
 	for (int channel = 0; channel < 4; channel++)
 	{
 	    int volume = !low_or_high[channel] ? 0xF : volume_regs[channel];
-	    sample += volume_table[volume];
+
+	    if (testbit(stereo_value, (stereo_offs + channel)))
+	    {
+		sample += volume_table[volume];
+	    }
 	}
 
 	return sample;
@@ -116,6 +107,27 @@ namespace beepsg
 	noisefeedback = noisefb;
 	noisebitmask = (lfsrbitwidth - 1);
 	lfsr = (1 << noisebitmask);
+    }
+
+    void SN76489::reset()
+    {
+	stereo_value = 0xFF;
+	noisefeedback = 9;
+	noisebitmask = 15;
+	lfsr = 0x8000;
+
+	for (int level = 0; level < 15; level++)	
+	{
+	    float value = pow(pow(10.0, -0.1), level);
+	    volume_table[level] = int16_t((value * 4096) + 0.5);
+	}
+
+	volume_table[0xF] = 0;
+
+	volume_regs.fill(0xF);
+	tone_regs.fill(0);
+	tone_vals.fill(0);
+	low_or_high.fill(false);
     }
 
     void SN76489::writeIO(uint8_t data)
@@ -167,7 +179,7 @@ namespace beepsg
 
     void SN76489::writestereo(uint8_t data)
     {
-	cout << "Writing value of " << hex << (int)data << " to SN76489 Game Gear stereo port" << endl;
+	stereo_value = data;
     }
 
     void SN76489::clockchip()
@@ -176,11 +188,13 @@ namespace beepsg
 	noiseclock();
     }
 
-    array<int32_t, 2> SN76489::get_sample()
+    vector<int32_t> SN76489::get_samples()
     {
-	int16_t left = generate_sample();
-	int16_t right = generate_sample();
-	array<int32_t, 2> samples = {left, right};
+	int32_t left = generate_sample(false);
+	int32_t right = generate_sample(true);
+	vector<int32_t> samples;
+	samples.push_back(left);
+	samples.push_back(right);
 	return samples;
     }
 };

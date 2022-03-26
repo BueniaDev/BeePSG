@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <array>
 #include <cmath>
+#include <vector>
 using namespace std;
 
 namespace beepsg
@@ -36,10 +37,11 @@ namespace beepsg
 	    uint32_t get_sample_rate(uint32_t clock_rate);
 	    uint32_t get_divisor() const;
 	    void config(int noisefb, int lfsrbitwidth);
+	    void reset();
 	    void writeIO(uint8_t data);
 	    void writestereo(uint8_t data);
 	    void clockchip();
-	    array<int32_t, 2> get_sample();
+	    vector<int32_t> get_samples();
 
 	private:
 	    template<typename T>
@@ -59,7 +61,7 @@ namespace beepsg
 
 	    void toneclock();
 	    void noiseclock();
-	    int16_t generate_sample();
+	    int32_t generate_sample(bool is_right_ch);
 
 	    int noisefeedback = 0;
 	    int noisebitmask = 0;
@@ -80,6 +82,8 @@ namespace beepsg
 	    int noise_val = 0;
 
 	    bool output_toggle = false;
+
+	    uint8_t stereo_value = 0;
     };
 }
 
